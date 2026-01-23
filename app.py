@@ -15,10 +15,10 @@ from PIL import Image
 import tempfile
 
 @st.cache_resource
-def cargar_modelo():
+def load_model():
     return YOLO("model/best.pt")
 
-modelo_yolo = cargar_modelo()
+model = load_model()
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as img:

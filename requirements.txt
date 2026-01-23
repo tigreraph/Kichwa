@@ -6,14 +6,8 @@ plotly>=5.18.0
 scikit-learn
 python-dotenv
 pillow
-
-# YOLOv8
 ultralytics==8.4.6
-
-# OpenCV (necesario para YOLO)
 opencv-python-headless
-
-# Torch CPU (Streamlit Cloud no tiene GPU)
 torch==2.1.2
 torchvision==0.16.2
 

@@ -1,5 +1,11 @@
 #KICHWA
 import streamlit as st
+
+st.set_page_config(
+    page_title="Kichwa",
+    page_icon="🙋🏻‍♀️",
+    layout="wide"
+)
 import base64
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -19,11 +25,7 @@ def get_base64_image(image_path):
         return base64.b64encode(img.read()).decode()
 
 
-st.set_page_config(
-    page_title="Kichwa",
-    page_icon="🙋🏻‍♀️",
-    layout="wide"
-)
+
 
 fondo_base64 = get_base64_image("fondo.png")
 

@@ -346,90 +346,60 @@ if seccion == "🧠 Clasificación de Prendas":
 
     if uploaded_file is not None:
         try:
-            # Cargar imagen
             image = Image.open(uploaded_file).convert("RGB")
-            st.image(image, caption="Imagen cargada", use_column_width=True)
+            st.image(image, caption="Imagen cargada", use_container_width=True)
 
             with st.spinner("Analizando imagen..."):
-                # Guardar imagen temporalmente
+                # Guardar imagen temporal
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                    image.save(tmp.name, format='JPEG')
+                    image.save(tmp.name, format="JPEG")
                     img_path = tmp.name
 
-                try:
-                    # Cargar modelo con configuración optimizada
-                    model = load_model()
-                    
-                    # Predicción con parámetros optimizados para Streamlit Cloud
-                    results = model.predict(
-                        source=img_path,
-                        save=False,
-                        conf=0.25,  # Confianza mínima
-                        iou=0.45,   # IoU para NMS
-                        imgsz=640,  # Tamaño de imagen
-                        device='cpu',  # Forzar CPU
-                        verbose=False  # Reducir output
+                model = load_model()
+
+                results = model.predict(
+                    source=img_path,
+                    conf=0.25,
+                    imgsz=640,
+                    device="cpu",
+                    verbose=False
+                )
+
+                if not results or len(results[0].boxes) == 0:
+                    st.warning("⚠️ No se detectaron prendas.")
+                else:
+                    st.success(f"✅ Se detectaron {len(results[0].boxes)} prenda(s)")
+
+                    draw = ImageDraw.Draw(image)
+
+                    for i, box in enumerate(results[0].boxes, 1):
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        cls_id = int(box.cls[0])
+                        conf = float(box.conf[0])
+
+                        clase = model.names[cls_id]
+                        kichwa = TRADUCCION_KICHWA.get(clase, "—")
+
+                        # Dibujar bounding box
+                        draw.rectangle([x1, y1, x2, y2], outline="lime", width=3)
+                        draw.text((x1, y1 - 10), f"{clase} {conf:.2f}", fill="lime")
+
+                        # Mostrar info
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric(f"Prenda {i}", clase)
+                        col2.metric("Confianza", f"{conf:.2%}")
+                        col3.metric("Kichwa", kichwa)
+
+                    st.image(
+                        image,
+                        caption="Resultado de la detección",
+                        use_container_width=True
                     )
 
-                    # Verificar si hay resultados
-                    if results and len(results) > 0:
-                        result = results[0]
-                        
-                        # Mostrar imagen con bounding boxes
-                        annotated = result.plot()
-                        st.image(
-                            annotated,
-                            caption="Resultado de la detección",
-                            use_column_width=True
-                        )
+                os.remove(img_path)
 
-                        # Mostrar resultados en texto
-                        st.subheader("📋 Resultados")
-
-                        if len(result.boxes) == 0:
-                            st.warning("⚠️ No se detectaron prendas en la imagen.")
-                            st.info("💡 Intenta con una imagen más clara o con mejor iluminación.")
-                        else:
-                            st.success(f"✅ Se detectaron {len(result.boxes)} prenda(s)")
-                            
-                            for idx, box in enumerate(result.boxes, 1):
-                                cls_id = int(box.cls[0])
-                                clase = model.names[cls_id]
-                                confianza = float(box.conf[0])
-                                kichwa = TRADUCCION_KICHWA.get(clase, "—")
-
-                                # Crear columnas para mejor presentación
-                                col1, col2, col3 = st.columns(3)
-                                
-                                with col1:
-                                    st.metric(label=f"Prenda {idx}", value=clase)
-                                with col2:
-                                    st.metric(label="Confianza", value=f"{confianza:.2%}")
-                                with col3:
-                                    st.metric(label="Kichwa", value=kichwa)
-                                
-                                st.markdown("---")
-                    
-                    else:
-                        st.error("❌ No se pudo procesar la imagen correctamente.")
-                
-                except Exception as e:
-                    st.error(f"❌ Error durante la predicción: {str(e)}")
-                    st.info("💡 Consejos:")
-                    st.markdown("""
-                    - Asegúrate de que el archivo `model/best.pt` esté en tu repositorio
-                    - Verifica que la imagen sea clara y esté bien iluminada
-                    - Intenta con una imagen más pequeña (menos de 2MB)
-                    """)
-                
-                finally:
-                    # Limpiar archivo temporal
-                    if os.path.exists(img_path):
-                        os.remove(img_path)
-        
         except Exception as e:
-            st.error(f"❌ Error al cargar la imagen: {str(e)}")
-            st.info("Por favor, intenta con otra imagen en formato JPG, JPEG o PNG.")
+            st.error(f"❌ Error durante la predicción: {e}")
 if seccion == "🌱 Cultura Kichwa":
     st.markdown("""
     <div class="title-box">

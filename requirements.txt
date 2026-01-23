@@ -1,21 +1,20 @@
-streamlit>=1.31.0
+streamlit==1.31.0
 numpy>=1.24.0
 pandas>=2.0.0
 matplotlib>=3.7.0
 plotly>=5.18.0
-pillow
-python-dotenv
 scikit-learn
+python-dotenv
+pillow
 
-# Deep Learning (compatibles con Streamlit Cloud)
-torch==2.2.2
-torchvision==0.17.2
+# YOLOv8
 ultralytics==8.4.6
 
-# OpenCV SIN GUI (OBLIGATORIO)
-opencv-python-headless==4.9.0.80
+# OpenCV (necesario para YOLO)
+opencv-python-headless
 
-psycopg2-binary>=2.9.9
-
+# Torch CPU (Streamlit Cloud no tiene GPU)
+torch==2.1.2
+torchvision==0.16.2
 
 

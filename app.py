@@ -1,4 +1,5 @@
 #KICHWA
+import os
 import streamlit as st
 
 st.set_page_config(
@@ -14,11 +15,28 @@ from ultralytics import YOLO
 from PIL import Image
 import tempfile
 
+TRADUCCION_KICHWA = {
+    "Anaco": "anaku",
+    "Anillo": "wallka",
+    "Camisa": "kamisa",
+    "Collar": "wallka",
+    "Faja delgada": "chumbi",
+    "Manilla": "makipampa",
+    "Pantalon": "wara",
+    "Prendedor": "tupu",
+    "Sombrero": "muchiku",
+    "Zapato": "utusha",
+    "blusa": "blusa",
+    "camiseta": "kamisita",
+    "faja madre": "hatun chumbi",
+    "poncho": "ponchu"
+}
+
 @st.cache_resource
 def load_model():
+    from ultralytics import YOLO
     return YOLO("model/best.pt")
 
-model = load_model()
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as img:
@@ -319,65 +337,65 @@ if seccion == "👕 Aprende Kichwa – Vestimenta":
 
 
 if seccion == "🧠 Clasificación de Prendas":
-    st.markdown("""
-    <div class="title-box">
-        <h1>🧠 Clasificación de Prendas</h1>
-        <p>
-        Sube una imagen de una prenda tradicional y el sistema
-        la identificará automáticamente usando inteligencia artificial.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("📸 Clasificación de Prendas")
 
-    st.markdown("### 📸 Cargar imagen")
-
-    imagen = st.file_uploader(
-        "Selecciona una imagen (.jpg, .png)",
+    uploaded_file = st.file_uploader(
+        "Sube una imagen",
         type=["jpg", "jpeg", "png"]
     )
 
-    if imagen is not None:
-        # Mostrar imagen original
-        img = Image.open(imagen)
-        st.image(img, caption="Imagen cargada", use_container_width=True)
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, caption="Imagen cargada", use_container_width=True)
 
-        # Guardar imagen temporalmente
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-            img.save(tmp.name)
-            ruta_temp = tmp.name
-
-        st.markdown("### 🔍 Resultado de la clasificación")
-
+        
         with st.spinner("Analizando imagen..."):
-            resultados = model.predict(
-                source=ruta_temp,
-                conf=0.6,
-                save=False
-            )
+                # Guardar imagen temporalmente
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                    image.save(tmp.name)
+                    img_path = tmp.name
 
-        # Mostrar imagen con bounding boxes
-        imagen_resultado = resultados[0].plot()
-        st.image(imagen_resultado, caption="Predicción del modelo", use_container_width=True)
+                # Cargar modelo
+                model = load_model()
 
-        # Mostrar etiquetas detectadas
-        clases = resultados[0].names
-        detecciones = resultados[0].boxes
+                # Predicción
+                results = model.predict(
+                    source=img_path,
+                    save=False
+                )
 
-        if detecciones is not None and len(detecciones) > 0:
-            st.markdown("### 🏷️ Prendas detectadas")
+                # Mostrar imagen con bounding boxes
+                annotated = results[0].plot()
+                st.image(
+                    annotated,
+                    caption="Resultado de la detección",
+                    use_container_width=True
+                )
 
-            for box in detecciones:
-                clase_id = int(box.cls[0])
-                confianza = float(box.conf[0])
-                nombre = clases[clase_id]
+                # Mostrar resultados en texto
+                st.subheader("📋 Resultados")
 
-                st.success(f"**{nombre.upper()}** — confianza: {confianza:.2f}")
+                if len(results[0].boxes) == 0:
+                    st.warning("No se detectaron prendas.")
+                else:
+                    for box in results[0].boxes:
+                        cls_id = int(box.cls[0])
+                        clase = model.names[cls_id]
+                        confianza = float(box.conf[0])
 
-                # Intentar reproducir audio
-                mostrar_audio(nombre.lower())
-        else:
-            st.warning("⚠️ No se detectaron prendas en la imagen.")
+                        kichwa = TRADUCCION_KICHWA.get(clase, "—")
 
+                        st.markdown(
+                            f"""
+                            **Prenda:** {clase}  
+                            **Confianza:** {confianza:.2f}  
+                            **Kichwa:** {kichwa}
+                            ---
+                            """
+                        )
+
+                # Limpiar archivo temporal
+                os.remove(img_path)
 if seccion == "🌱 Cultura Kichwa":
     st.markdown("""
     <div class="title-box">

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from ultralytics import YOLO
-from PIL import Image
+from PIL import Image,ImageDraw
 import tempfile
 
 TRADUCCION_KICHWA = {

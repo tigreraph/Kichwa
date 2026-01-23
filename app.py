@@ -4,6 +4,15 @@ import base64
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from ultralytics import YOLO
+from PIL import Image
+import tempfile
+
+@st.cache_resource
+def cargar_modelo():
+    return YOLO("model/best.pt")
+
+modelo_yolo = cargar_modelo()
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as img:
@@ -312,12 +321,60 @@ if seccion == "🧠 Clasificación de Prendas":
     <div class="title-box">
         <h1>🧠 Clasificación de Prendas</h1>
         <p>
-        Esta sección permitirá identificar prendas tradicionales
-        a partir de imágenes usando inteligencia artificial.
+        Sube una imagen de una prenda tradicional y el sistema
+        la identificará automáticamente usando inteligencia artificial.
         </p>
-        <p><i>🚧 En desarrollo</i></p>
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown("### 📸 Cargar imagen")
+
+    imagen = st.file_uploader(
+        "Selecciona una imagen (.jpg, .png)",
+        type=["jpg", "jpeg", "png"]
+    )
+
+    if imagen is not None:
+        # Mostrar imagen original
+        img = Image.open(imagen)
+        st.image(img, caption="Imagen cargada", use_container_width=True)
+
+        # Guardar imagen temporalmente
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+            img.save(tmp.name)
+            ruta_temp = tmp.name
+
+        st.markdown("### 🔍 Resultado de la clasificación")
+
+        with st.spinner("Analizando imagen..."):
+            resultados = modelo_yolo.predict(
+                source=ruta_temp,
+                conf=0.6,
+                save=False
+            )
+
+        # Mostrar imagen con bounding boxes
+        imagen_resultado = resultados[0].plot()
+        st.image(imagen_resultado, caption="Predicción del modelo", use_container_width=True)
+
+        # Mostrar etiquetas detectadas
+        clases = resultados[0].names
+        detecciones = resultados[0].boxes
+
+        if detecciones is not None and len(detecciones) > 0:
+            st.markdown("### 🏷️ Prendas detectadas")
+
+            for box in detecciones:
+                clase_id = int(box.cls[0])
+                confianza = float(box.conf[0])
+                nombre = clases[clase_id]
+
+                st.success(f"**{nombre.upper()}** — confianza: {confianza:.2f}")
+
+                # Intentar reproducir audio
+                mostrar_audio(nombre.lower())
+        else:
+            st.warning("⚠️ No se detectaron prendas en la imagen.")
 
 if seccion == "🌱 Cultura Kichwa":
     st.markdown("""

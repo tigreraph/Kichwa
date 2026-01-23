@@ -6,6 +6,11 @@ plotly>=5.18.0
 matplotlib>=3.7.0
 scikit-learn
 python-dotenv
-torch
-torchvision
+
+# --- Deep Learning / YOLOv8 ---
+ultralytics>=8.0.200
+torch>=2.0.0
+torchvision>=0.15.0
+opencv-python
 pillow
+

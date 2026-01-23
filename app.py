@@ -349,7 +349,7 @@ if seccion == "🧠 Clasificación de Prendas":
         st.markdown("### 🔍 Resultado de la clasificación")
 
         with st.spinner("Analizando imagen..."):
-            resultados = modelo_yolo.predict(
+            resultados = model.predict(
                 source=ruta_temp,
                 conf=0.6,
                 save=False

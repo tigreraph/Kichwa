@@ -7,14 +7,15 @@ pillow
 python-dotenv
 scikit-learn
 
-# Deep Learning
+# Deep Learning (compatibles con Streamlit Cloud)
 torch==2.2.2
 torchvision==0.17.2
 ultralytics==8.4.6
 
-# OpenCV compatible con cloud
+# OpenCV SIN GUI (OBLIGATORIO)
 opencv-python-headless==4.9.0.80
 
 psycopg2-binary>=2.9.9
+
 
 

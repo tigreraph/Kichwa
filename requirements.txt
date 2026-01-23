@@ -1,16 +1,16 @@
 streamlit>=1.31.0
-pandas>=2.0.0
 numpy>=1.24.0
-psycopg2-binary>=2.9.9
-plotly>=5.18.0
+pandas>=2.0.0
 matplotlib>=3.7.0
-scikit-learn
-python-dotenv
-
-# --- Deep Learning / YOLOv8 ---
-ultralytics>=8.0.200
-torch>=2.0.0
-torchvision>=0.15.0
-opencv-python
+plotly>=5.18.0
 pillow
+python-dotenv
+scikit-learn
+# Deep Learning
+torch==2.2.2
+torchvision==0.17.2
+ultralytics==8.4.6
+opencv-python-headless==4.9.0.80
+# DB
+psycopg2-binary>=2.9.9
 

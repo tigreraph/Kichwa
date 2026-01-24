@@ -147,7 +147,7 @@ seccion = st.sidebar.radio(
     "Selecciona una sección:",
     [
         "🏠 Inicio",
-        "👕 Aprende Kichwa – Vestimenta",
+        "👕 Aprende Kichwa-Vestimenta",
         "🧠 Clasificación de Prendas",
         "📈 Análisis gráfico del vocabulario Kichwa"
     ]

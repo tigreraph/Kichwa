@@ -207,7 +207,7 @@ if seccion == "🏠 Inicio":
     st.stop()
 
 
-if seccion == "👕 Aprende Kichwa – Vestimenta":
+if seccion == "👕 Aprende Kichwa-Vestimenta":
     st.markdown("""
     <div class="title-box">
         <h1>🙋🏻‍♀️ CHURANAKUNA</h1>

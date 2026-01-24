@@ -37,12 +37,28 @@ def load_model():
     from ultralytics import YOLO
     return YOLO("model/best.pt")
 
+# ===============================
+# UTILIDADES
+# ===============================
+def mostrar_imagen(nombre):
+    ruta = os.path.join("imagenes", f"{nombre}.png")
+    if os.path.exists(ruta):
+        st.image(ruta, use_container_width=True)
+    else:
+        st.warning(f"🖼 Imagen no disponible: {ruta}")
 
-def get_base64_image(image_path):
-    with open(image_path, "rb") as img:
-        return base64.b64encode(img.read()).decode()
+def mostrar_audio(nombre):
+    ruta = os.path.join("Audios", f"{nombre}.mp3")
+    if os.path.exists(ruta):
+        st.audio(ruta)
+    else:
+        st.info("🔊 Audio no disponible")
 
-
+def get_base64_image(path):
+    if not os.path.exists(path):
+        return ""
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 
 fondo_base64 = get_base64_image("fondo.png")
@@ -312,11 +328,13 @@ if seccion == "👕 Aprende Kichwa – Vestimenta":
         "wawa_chumpi": "Wawa chumpi significa faja delgada."
     }
 
-
+    # Mostrar en filas de 3
     for i in range(0, len(prendas), 3):
         cols = st.columns(3)
-        for col, prenda in zip(cols, prendas[i:i+3]):
+
+        for col, prenda in zip(cols, prendas[i:i + 3]):
             with col:
+                # Card de texto
                 st.markdown(
                     f"""
                     <div class='card'>
@@ -327,14 +345,20 @@ if seccion == "👕 Aprende Kichwa – Vestimenta":
                     unsafe_allow_html=True
                 )
 
+                # Imagen
                 mostrar_imagen(prenda[2])
+
+                # Audio
                 mostrar_audio(prenda[2])
 
-                st.caption(f"🎧 {textos_audio.get(prenda[2], 'Audio explicativo no disponible.')}")
+                # Texto del audio
+                st.caption(
+                    f"🎧 {textos_audio.get(prenda[2], 'Audio explicativo no disponible.')}"
+                )
 
+                # Expander cultural
                 with st.expander("📖 Importancia cultural"):
                     st.write(prenda[3])
-
 
 if seccion == "🧠 Clasificación de Prendas":
     st.title("📸 Clasificación de Prendas")

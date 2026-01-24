@@ -134,9 +134,10 @@ def mostrar_audio(nombre):
 
 def mostrar_imagen(nombre):
     try:
-        st.image(f"imagenes/{nombre}.png", use_container_width=True)
+        st.image(f"Imagenes/{nombre}.png", use_container_width=True)
     except:
         st.warning("🖼 Imagen no disponible")
+
 
 
 st.markdown('<div class="content">', unsafe_allow_html=True)

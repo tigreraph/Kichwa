@@ -41,14 +41,14 @@ def load_model():
 # UTILIDADES
 # ===============================
 def mostrar_imagen(nombre):
-    ruta = os.path.join("imagenes", f"{nombre}.png")
+    ruta = f"Imagenes/{nombre}.png"
     if os.path.exists(ruta):
         st.image(ruta, use_container_width=True)
     else:
-        st.warning(f"🖼 Imagen no disponible: {ruta}")
+        st.warning("🖼 Imagen no disponible")
 
 def mostrar_audio(nombre):
-    ruta = os.path.join("Audios", f"{nombre}.mp3")
+    ruta = f"Audios/{nombre}.mp3"
     if os.path.exists(ruta):
         st.audio(ruta)
     else:

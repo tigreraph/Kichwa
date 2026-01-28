@@ -7,39 +7,83 @@ st.set_page_config(
     page_icon="🙋🏻‍♀️",
     layout="wide"
 )
+import torch
+from torchvision import models,transforms
+from torch import nn
+from PIL import Image
 import base64
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from ultralytics import YOLO
-from PIL import Image,ImageDraw
 import tempfile
 
+# ===============================
+# CONSTANTES
+# ===============================
+MODEL_PATH = "model/resnet_kichwa_fast.pt"
+
+CLASS_NAMES = [
+    "Blusa", "Bufanda", "Camisa", "Camiseta", "Casaca",
+    "Chompas", "Faja", "Falda", "Pantalon", "Poncho",
+    "Prendedor", "Sombrero", "Vestido", "Zapatos"
+]
+
 TRADUCCION_KICHWA = {
-    "Anaco": "anaku",
-    "Anillo": "wallka",
-    "Camisa": "kamisa",
-    "Collar": "wallka",
-    "Faja delgada": "chumbi",
-    "Manilla": "makipampa",
-    "Pantalon": "wara",
+    "Blusa": "anaku",
+    "Bufanda": "kunkallina",
+    "Camisa": "kushma",
+    "Camiseta": "unkuña",
+    "Casaca": "raku kushma",
+    "Chompas": "chumpi kushma",
+    "Faja": "chumpi",
+    "Falda": "wara",
+    "Pantalon": "wara ushuta",
+    "Poncho": "ruwana",
     "Prendedor": "tupu",
     "Sombrero": "muchiku",
-    "Zapato": "utusha",
-    "blusa": "blusa",
-    "camiseta": "kamisita",
-    "faja madre": "hatun chumbi",
-    "poncho": "ponchu"
+    "Vestido": "anaku warmi",
+    "Zapatos": "ushuta"
 }
 
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# ===============================
 @st.cache_resource
 def load_model():
-    from ultralytics import YOLO
-    return YOLO("model/best.pt")
+    MODEL_PATH = "model/resnet_kichwa_fast.pt"
+
+    # ⚠️ IMPORTANTE: mismo modelo que entrenamiento
+    model = models.resnet34(weights=None)
+
+    num_features = model.fc.in_features
+    num_classes = 14  # 🔴 AJUSTA según tus clases reales
+
+    model.fc = nn.Sequential(
+        nn.Dropout(0.5),
+        nn.Linear(num_features, num_classes)
+    )
+
+    state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+    model.load_state_dict(state_dict)
+
+    model.to(DEVICE)
+    model.eval()
+
+    return model
+
+model = load_model()
 
 # ===============================
 # UTILIDADES
 # ===============================
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225)
+    )
+])
+
 def mostrar_imagen(nombre):
     ruta = f"Imagenes/{nombre}.png"
     if os.path.exists(ruta):
@@ -362,7 +406,7 @@ if seccion == "👕 Aprende Kichwa-Vestimenta":
                     st.write(prenda[3])
 
 if seccion == "🧠 Clasificación de Prendas":
-    st.title("📸 Clasificación de Prendas")
+    st.title("🧠 Clasificación de Prendas")
 
     uploaded_file = st.file_uploader(
         "Sube una imagen",
@@ -372,59 +416,34 @@ if seccion == "🧠 Clasificación de Prendas":
     if uploaded_file is not None:
         try:
             image = Image.open(uploaded_file).convert("RGB")
-            st.image(image, caption="Imagen cargada", use_container_width=True)
 
-            with st.spinner("Analizando imagen..."):
-                # Guardar imagen temporal
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                    image.save(tmp.name, format="JPEG")
-                    img_path = tmp.name
+            st.image(
+                image,
+                caption="Imagen cargada",
+                use_container_width=True
+            )
 
-                model = load_model()
+            with st.spinner("🧠 Analizando imagen..."):
+                input_tensor = transform(image).unsqueeze(0).to(DEVICE)
 
-                results = model.predict(
-                    source=img_path,
-                    conf=0.25,
-                    imgsz=640,
-                    device="cpu",
-                    verbose=False
-                )
+                with torch.no_grad():
+                    outputs = model(input_tensor)
+                    probs = torch.softmax(outputs, dim=1)
+                    conf, pred = torch.max(probs, 1)
 
-                if not results or len(results[0].boxes) == 0:
-                    st.warning("⚠️ No se detectaron prendas.")
-                else:
-                    st.success(f"✅ Se detectaron {len(results[0].boxes)} prenda(s)")
+                clase = CLASS_NAMES[pred.item()]
+                confianza = conf.item()
+                kichwa = TRADUCCION_KICHWA.get(clase, "—")
 
-                    draw = ImageDraw.Draw(image)
+            st.success("✅ Prenda clasificada correctamente")
 
-                    for i, box in enumerate(results[0].boxes, 1):
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        cls_id = int(box.cls[0])
-                        conf = float(box.conf[0])
-
-                        clase = model.names[cls_id]
-                        kichwa = TRADUCCION_KICHWA.get(clase, "—")
-
-                        # Dibujar bounding box
-                        draw.rectangle([x1, y1, x2, y2], outline="lime", width=3)
-                        draw.text((x1, y1 - 10), f"{clase} {conf:.2f}", fill="lime")
-
-                        # Mostrar info
-                        col1, col2, col3 = st.columns(3)
-                        col1.metric(f"Prenda {i}", clase)
-                        col2.metric("Confianza", f"{conf:.2%}")
-                        col3.metric("Kichwa", kichwa)
-
-                    st.image(
-                        image,
-                        caption="Resultado de la detección",
-                        use_container_width=True
-                    )
-
-                os.remove(img_path)
+            col1, col2, col3 = st.columns(3)
+            col1.metric("👕 Prenda", clase)
+            col2.metric("📊 Confianza", f"{confianza:.2%}")
+            col3.metric("🌱 Kichwa", kichwa)
 
         except Exception as e:
-            st.error(f"❌ Error durante la predicción: {e}")
+            st.error(f"❌ Error durante la clasificación: {e}")
 if seccion == "🌱 Cultura Kichwa":
     st.markdown("""
     <div class="title-box">

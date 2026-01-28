@@ -36,14 +36,23 @@ El modelo fue entrenado y evaluado localmente y luego integrado directamente en 
 
 ## 📂 Estructura del proyecto
 KICHWA/
+
 ├── Audios/ # Audios en Kichwa
+
 ├── Imagenes/ # Imágenes educativas
+
 ├── model/
+
 │ └── resnet_kichwa_fast.pt
+
 ├── train/
+
 │ └── train.ipynb # Entrenamiento del modelo
+
 ├── app.py # Aplicación Streamlit
+
 ├── requirements.txt
+
 └── README.md
 
 
